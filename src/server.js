@@ -5,7 +5,6 @@ const cors = require('@koa/cors');
 
 const app = new Koa();
 const tickets = [];
-const ticketsDescription = {};
 
 app.use(cors());
 app.use(koaBody({
@@ -22,33 +21,54 @@ app.use(async (ctx) => {
       ctx.response.body = tickets;
       return;
     }
-    case 'ticketById': {
-      let currentTicket = {};
-      tickets.some((item) => {
-        if (item.id === Number(id)) {
-          currentTicket = item;
-          currentTicket.description = ticketsDescription[id];
-        }
-      });
-      ctx.response.body = currentTicket;
-      return;
-    }
     case 'createTicket': {
-      const { name, description, status } = ctx.request.body;
+      const { name, description } = ctx.request.body;
       tickets.push({
         id: ID,
         name,
-        status,
+        description,
+        status: false,
         created: ID,
       });
-      ticketsDescription[ID] = description;
-      ctx.response.body = {
-        id: ID,
-        name,
-        description,
-        status,
-        created: ID,
-      };
+      ctx.response.body = tickets;
+      return;
+    }
+    case 'editTicket': {
+      const { id, name, description } = ctx.request.body;
+      tickets.some((item) => {
+        if (item.id === Number(id)) {
+          item.name = name;
+          item.description = description;
+        }
+      });
+      ctx.response.body = tickets;
+      return;
+    }
+    case 'completeTicket': {
+      let { id, status } = ctx.request.body;
+      if (status && status === '1') {
+        status = true;
+      } else if (status && status === '0') {
+        status = false;
+      }
+      tickets.some((item) => {
+        if (item.id === Number(id)) {
+          item.status = status;
+        }
+      });
+      ctx.response.body = { id, status };
+      return;
+    }
+    case 'dellTicket': {
+      let index;
+      for (let i = 0; i < tickets.length; i += 1) {
+        if (tickets[i].id === Number(id)) {
+          index = i;
+          break;
+        }
+      }
+      tickets.splice(index, 1);
+      ctx.response.body = tickets;
       return;
     }
     default: {
